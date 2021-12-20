@@ -24,6 +24,22 @@ class TestScreen extends StatelessWidget {
     }
   }
 
+  Future<List<Album>> fetchAlbums() async {
+    // await [Future가 리턴되는 코드]
+    final response = await http
+        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      return Album.listToAlbums(jsonDecode(response.body));
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,29 +47,67 @@ class TestScreen extends StatelessWidget {
         title: const Text('테스트 스크린'),
       ),
       body: Center(
-        child: FutureBuilder<Album>(
-          future: fetchAlbum(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return const Text('네트워크 에러!!');
-            }
+        child: Column(
+          children: [
+            FutureBuilder<Album>(
+              future: fetchAlbum(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Text('네트워크 에러!!');
+                }
 
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
 
-            if (!snapshot.hasData) {
-              return const Text('데이터가 없습니다.');
-            }
+                if (!snapshot.hasData) {
+                  return const Text('데이터가 없습니다.');
+                }
 
-            final album = snapshot.data!;
+                final album = snapshot.data!;
 
-            return Text(
-              album.toString(),
-              style: const TextStyle(fontSize: 24),
-            );
-          },
+                return Text(
+                  album.toString(),
+                  style: const TextStyle(fontSize: 24),
+                );
+              },
+            ),
+            ElevatedButton(onPressed: () {}, child: const Text('앨범들 가져오기')),
+            FutureBuilder<List<Album>>(
+              future: fetchAlbums(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Text('네트워크 에러!!');
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+
+                if (!snapshot.hasData) {
+                  return const Text('데이터가 없습니다.');
+                }
+
+                final albums = snapshot.data!;
+
+                return _buildAlbums(context, albums);
+              },
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAlbums(BuildContext context, List<Album> albums) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: albums.length,
+        itemBuilder: (context, idx) {
+          return ListTile(
+            title: Text(albums[idx].title),
+          );
+        },
       ),
     );
   }
