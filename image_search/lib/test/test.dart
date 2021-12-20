@@ -4,23 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_search/model/album.dart';
 
-class TestScreen extends StatefulWidget {
+class TestScreen extends StatelessWidget {
   const TestScreen({Key? key}) : super(key: key);
-
-  @override
-  State<TestScreen> createState() => _TestScreenState();
-}
-
-class _TestScreenState extends State<TestScreen> {
-  Album? _album;
-
-  Future<void> init() async {
-    Album album = await fetchAlbum();
-
-    setState(() {
-      _album = album;
-    });
-  }
 
   // 오래 걸리는 처리
   Future<Album> fetchAlbum() async {
@@ -39,20 +24,6 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
-  // 스테이트풀 위젯이 생성될 때, 맨 처음 한번만 수행
-  @override
-  void initState() {
-    // init 비동기 함수에서 앨범을 가져오고 setState를 사용하여 반영한다.
-    init();
-    // Future 를 리턴하는 메서드를 수행하고 나서 실행되는 메서드를 then 을 사용하여 구현한다.
-    // fetchAlbum().then((album) {
-    //   setState(() {
-    //     _album = album;
-    //   });
-    // });
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,12 +31,29 @@ class _TestScreenState extends State<TestScreen> {
         title: const Text('테스트 스크린'),
       ),
       body: Center(
-        child: _album == null
-            ? const CircularProgressIndicator()
-            : Text(
-                '${_album?.id}: ${_album.toString()}',
-                style: const TextStyle(fontSize: 30),
-              ),
+        child: FutureBuilder<Album>(
+          future: fetchAlbum(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Text('네트워크 에러!!');
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+
+            if (!snapshot.hasData) {
+              return const Text('데이터가 없습니다.');
+            }
+
+            final album = snapshot.data!;
+
+            return Text(
+              album.toString(),
+              style: const TextStyle(fontSize: 24),
+            );
+          },
+        ),
       ),
     );
   }
