@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_search/data/pixabay_api.dart';
 import 'package:image_search/model/album.dart';
 import 'package:image_search/model/photo.dart';
 
@@ -16,6 +17,7 @@ class _TestScreenState extends State<TestScreen> {
   String _query = 'apple';
   List<Photo> _photos = [];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final PixabayApi _api = PixabayApi();
 
   // 오래 걸리는 처리
   Future<Album> fetchAlbum() async {
@@ -34,24 +36,8 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
-  Future<List<Photo>> fetchPhotos(String query) async {
-    // await [Future가 리턴되는 코드]
-    final response = await http.get(Uri.parse(
-        'https://pixabay.com/api/?key=24806114-c007510d8db60c6c4666be055&q=$query&image_type=photo&pretty=true&per_page=100'));
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Photo.listToPhotos(jsonDecode(response.body)['hits']);
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load photos');
-    }
-  }
-
   Future<void> searchImage() async {
-    _photos = await fetchPhotos(_query);
+    _photos = await _api.fetchPhotos(_query);
 
     setState(() {});
   }

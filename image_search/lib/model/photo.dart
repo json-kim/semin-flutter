@@ -100,8 +100,4 @@ class Photo {
     _data['userImageURL'] = userImageURL;
     return _data;
   }
-
-  static List<Photo> listToPhotos(List jsonList) {
-    return jsonList.map((e) => Photo.fromJson(e)).toList();
-  }
 }

@@ -1,8 +1,7 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:image_search/model/album.dart';
+import 'package:image_search/data/pixabay_api.dart';
 import 'package:image_search/model/photo.dart';
 
 class ImageSearchScreen extends StatefulWidget {
@@ -13,48 +12,27 @@ class ImageSearchScreen extends StatefulWidget {
 }
 
 class _ImageSearchScreenState extends State<ImageSearchScreen> {
-  String _query = 'apple';
-  List<Photo> _photos = [];
+  StreamController<List<Photo>> streamController =
+      StreamController<List<Photo>>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final PixabayApi _api = PixabayApi();
 
-  // 오래 걸리는 처리
-  Future<Album> fetchAlbum() async {
-    // await [Future가 리턴되는 코드]
-    final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+  Future<void> _searchImage(String query) async {
+    final photos = await _api.fetchPhotos(query);
 
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Album.fromJson(jsonDecode(response.body));
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load album');
-    }
-  }
-
-  Future<List<Photo>> fetchPhotos(String query) async {
-    final response = await http.get(Uri.parse(
-        'https://pixabay.com/api/?key=24806114-c007510d8db60c6c4666be055&q=$query&image_type=photo&pretty=true&per_page=100'));
-
-    if (response.statusCode == 200) {
-      return Photo.listToPhotos(jsonDecode(response.body)['hits']);
-    } else {
-      throw Exception('Failed to load photos');
-    }
-  }
-
-  Future<void> searchImage() async {
-    _photos = await fetchPhotos(_query);
-
-    setState(() {});
+    streamController.add(photos);
   }
 
   @override
   void initState() {
-    searchImage();
+    _searchImage('apple');
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    streamController.close();
+    super.dispose();
   }
 
   @override
@@ -88,9 +66,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
                     if (!(currentState?.validate() ?? false)) {
                       return;
                     }
-
                     currentState?.save();
-                    searchImage();
                   },
                 ),
               ),
@@ -101,25 +77,50 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
                 return null;
               },
               onSaved: (value) {
-                _query = value ?? '';
+                final query = value ?? '';
+                _searchImage(query);
               },
             ),
           ),
         ),
         // 리스트 출력
-        _buildPhotos(context, _photos),
+        StreamBuilder<List<Photo>>(
+          stream: streamController.stream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+            if (snapshot.hasError) {
+              return const Text('Error !!');
+            }
+            if (!snapshot.hasData) {
+              return const Text('No Data Error !!');
+            }
+            return _buildPhotos(context, snapshot.data!);
+          },
+        ),
       ],
     );
   }
 
   Widget _buildPhotos(BuildContext context, List<Photo> photos) {
     return Expanded(
-      child: ListView.builder(
+      child: GridView.builder(
+        padding: const EdgeInsets.all(8),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
         itemCount: photos.length,
         itemBuilder: (context, idx) {
-          return ListTile(
-            leading: Image.network(photos[idx].previewURL),
-            title: Text(photos[idx].tags),
+          return ClipRRect(
+            clipBehavior: Clip.hardEdge,
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              photos[idx].webformatURL,
+              fit: BoxFit.cover,
+            ),
           );
         },
       ),
