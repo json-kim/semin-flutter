@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'test/test.dart';
+import 'package:image_search/ui/home/image_search_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const TestScreen(),
+      home: const ImageSearchScreen(),
     );
   }
 }

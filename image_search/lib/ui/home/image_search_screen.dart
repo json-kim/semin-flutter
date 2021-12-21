@@ -5,14 +5,14 @@ import 'package:http/http.dart' as http;
 import 'package:image_search/model/album.dart';
 import 'package:image_search/model/photo.dart';
 
-class TestScreen extends StatefulWidget {
-  const TestScreen({Key? key}) : super(key: key);
+class ImageSearchScreen extends StatefulWidget {
+  const ImageSearchScreen({Key? key}) : super(key: key);
 
   @override
-  State<TestScreen> createState() => _TestScreenState();
+  State<ImageSearchScreen> createState() => _ImageSearchScreenState();
 }
 
-class _TestScreenState extends State<TestScreen> {
+class _ImageSearchScreenState extends State<ImageSearchScreen> {
   String _query = 'apple';
   List<Photo> _photos = [];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -35,17 +35,12 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Future<List<Photo>> fetchPhotos(String query) async {
-    // await [Future가 리턴되는 코드]
     final response = await http.get(Uri.parse(
         'https://pixabay.com/api/?key=24806114-c007510d8db60c6c4666be055&q=$query&image_type=photo&pretty=true&per_page=100'));
 
     if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
       return Photo.listToPhotos(jsonDecode(response.body)['hits']);
     } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
       throw Exception('Failed to load photos');
     }
   }
@@ -66,7 +61,7 @@ class _TestScreenState extends State<TestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('테스트 스크린'),
+        title: const Text('이미지 검색'),
       ),
       body: _buildBody(),
     );
