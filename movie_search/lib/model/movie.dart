@@ -44,7 +44,7 @@ class Movie {
       overview: json['overview'],
       popularity: json['popularity'] / 1,
       posterPath: json['poster_path'] ?? '',
-      releaseDate: json['release_date'],
+      releaseDate: json['release_date'] ?? '날짜 없음',
       title: json['title'],
       video: json['video'],
       voteAverage: json['vote_average'] / 1,

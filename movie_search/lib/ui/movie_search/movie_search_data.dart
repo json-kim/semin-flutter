@@ -1,5 +1,5 @@
+import 'package:movie_search/data/the_movie_db_api.dart';
 import 'package:movie_search/model/movie.dart';
-import 'package:movie_search/model/the_movie_db_api.dart';
 
 class MovieSearchData {
   final TheMovieDBApi _movieDBApi = TheMovieDBApi();
@@ -8,7 +8,7 @@ class MovieSearchData {
   bool isLoading = false;
 
   Future<void> initMovieData() async {
-    int totalPage = await _movieDBApi.getTotalPage();
+    int totalPage = await _movieDBApi.fetchTotalPage();
 
     _loadedMovies = await getAllMovies(totalPage);
   }
@@ -22,7 +22,8 @@ class MovieSearchData {
     return movies;
   }
 
-  List<Movie> getMoviesWithQuery(String query) {
-    return _loadedMovies.where((e) => e.title.contains(query)).toList();
+  Future<List<Movie>> getMoviesWithQuery(String query) async {
+    final movies = await _movieDBApi.fetchMoviesWithQuery(query);
+    return movies;
   }
 }

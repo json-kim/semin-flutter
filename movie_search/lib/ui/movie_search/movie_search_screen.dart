@@ -26,16 +26,19 @@ class _MovieSearchScreenState extends State<MovieSearchScreen> {
     });
   }
 
+  Future<void> searchMoviesWithQuery(String query) async {
+    _movies = await _movieSearchData.getMoviesWithQuery(query);
+    setState(() {});
+  }
+
+  // 디바운싱 처리
   void onQueryChanged(String query) {
     if (_debounce?.isActive ?? false) {
       _debounce?.cancel();
     }
 
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        _movies = _movieSearchData.getMoviesWithQuery(query);
-      });
-    });
+    _debounce = Timer(
+        const Duration(milliseconds: 500), () => searchMoviesWithQuery(query));
   }
 
   @override
@@ -78,9 +81,7 @@ class _MovieSearchScreenState extends State<MovieSearchScreen> {
                 ),
                 onPressed: () {
                   final query = _textEditingController.text;
-                  setState(() {
-                    _movies = _movieSearchData.getMoviesWithQuery(query);
-                  });
+                  searchMoviesWithQuery(query);
                 },
               ),
             ),
